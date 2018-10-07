@@ -17,6 +17,7 @@ DEBUG = print if args.debug else lambda x : None
 
 source = ezdxf.readfile(args.source)
 target = ezdxf.new('AC1015')
+target.header['$AUNITS'] = source.header['$AUNITS'] if '$AUNITS' in source.header else 0
 
 entities = [ entity for entity in source.entities ]
 for entity in entities:
