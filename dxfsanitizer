@@ -56,10 +56,14 @@ for entity in entities:
                     DEBUG('ARC center:%s radius:%s start_angle:%s end_angle:%s' % (center, radius, start_angle, end_angle))
                     target.modelspace().add_arc(center, radius, start_angle, end_angle)
                 else:
-                    if not args.ignore:
+                    if args.ignore:
+                        DEBUG('%s ignored' % (block_entity.dxftype()))
+                    else:
                         raise Exception('DXF type %s is not supported' % (block_entity.dxftype()))
         else:
-            if not args.ignore:
+            if args.ignore:
+                DEBUG('%s ignored' % (entity.dxftype()))
+            else:
                 raise Exception('DXF type %s is not supported' % (entity.dxftype()))
 
 target.saveas(args.target)
