@@ -1,0 +1,10 @@
+#!/usr/bin/ipython3 -i
+
+import ezdxf
+import argparse
+
+parser = argparse.ArgumentParser(description='DXF sanitizer for laser cutter')
+parser.add_argument('source')
+args = parser.parse_args()
+
+source = ezdxf.readfile(args.source)
