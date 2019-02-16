@@ -7,7 +7,7 @@ clean:
 	$(RM) $(TARGETS)
 
 laser_%.dxf: test_%.dxf dxfsanitizer Makefile
-	./dxfsanitizer $< $@ --debug --ignore
+	./dxfsanitizer $< $@ --debug --ignore -l '0' -l '1' -l '2'
 
 
 %.html: %.dxf

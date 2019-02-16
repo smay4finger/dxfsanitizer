@@ -28,15 +28,25 @@ for entity in entities:
     if entity.dxf.layer not in args.layer:
         continue
     elif entity.dxftype() == 'LINE':
-        DEBUG("LINE start:%s end:%s" % (entity.dxf.start, entity.dxf.end))
-        target.modelspace().add_line(entity.dxf.start, entity.dxf.end)
+        start = entity.dxf.start
+        end   = entity.dxf.end
+        color = source.layers.get(entity.dxf.layer).dxf.color if entity.dxf.color == 256 else entity.dxf.color
+        DEBUG("LINE start:%s end:%s color:%s" % (start, end, color))
+        target.modelspace().add_line(start, end, dxfattribs={'color': color})
     elif entity.dxftype() == 'CIRCLE':
-        DEBUG('CIRCLE center:%s radius:%s' % (entity.dxf.center, entity.dxf.radius))
-        target.modelspace().add_circle(entity.dxf.center, entity.dxf.radius)
+        center = entity.dxf.center
+        radius = entity.dxf.radius
+        color  = source.layers.get(entity.dxf.layer).dxf.color if entity.dxf.color == 256 else entity.dxf.color
+        DEBUG('CIRCLE center:%s radius:%s color:%s' % (center, radius, color))
+        target.modelspace().add_circle(center, radius, dxfattribs={'color': color})
     elif entity.dxftype() == 'ARC':
-        DEBUG('ARC center:%s radius:%s start_angle:%s end_angle:%s' % (entity.dxf.center, entity.dxf.radius, entity.dxf.start_angle, entity.dxf.end_angle))
-        DEBUG('    extrusion: %s' % (str(entity.dxf.extrusion)))
-        target.modelspace().add_arc(entity.dxf.center, entity.dxf.radius, entity.dxf.start_angle, entity.dxf.end_angle)
+        center      = entity.dxf.center
+        radius      = entity.dxf.radius
+        start_angle = entity.dxf.start_angle
+        end_angle   = entity.dxf.end_angle
+        color       = source.layers.get(entity.dxf.layer).dxf.color if entity.dxf.color == 256 else entity.dxf.color
+        DEBUG('ARC center:%s radius:%s start_angle:%s end_angle:%s color:%s' % (center, radius, start_angle, end_angle, color))
+        target.modelspace().add_arc(center, radius, start_angle, end_angle, dxfattribs={'color': color})
     elif entity.dxftype() == 'INSERT':
         DEBUG('INSERT "%s" at %s scale:%s' % (entity.dxf.name, entity.dxf.insert, entity.dxf.xscale))
         block = source.blocks.get(entity.dxf.name)
@@ -46,21 +56,24 @@ for entity in entities:
         for block_entity in block:
             if block_entity.dxftype() == 'LINE':
                 start = Vector(block_entity.dxf.start).rot_z_deg(entity.dxf.rotation) * entity.dxf.xscale + Vector(entity.dxf.insert)
-                end = Vector(block_entity.dxf.end).rot_z_deg(entity.dxf.rotation) * entity.dxf.xscale + Vector(entity.dxf.insert)
-                DEBUG("    LINE start:%s end:%s" % (start, end))
-                target.modelspace().add_line(start, end)
+                end   = Vector(block_entity.dxf.end).rot_z_deg(entity.dxf.rotation) * entity.dxf.xscale + Vector(entity.dxf.insert)
+                color = source.layers.get(block_entity.dxf.layer).dxf.color if block_entity.dxf.color == 256 else block_entity.dxf.color
+                DEBUG("    LINE start:%s end:%s color:%s" % (start, end, color))
+                target.modelspace().add_line(start, end, dxfattribs={'color': color})
             elif block_entity.dxftype() == 'CIRCLE':
                 center = Vector(block_entity.dxf.center).rot_z_deg(entity.dxf.rotation) * entity.dxf.xscale + Vector(entity.dxf.insert)
                 radius = block_entity.dxf.radius * entity.dxf.xscale
-                DEBUG("    CIRCLE center:%s radius:%s" % (center, radius))
-                target.modelspace().add_circle(center, radius)
+                color  = source.layers.get(block_entity.dxf.layer).dxf.color if block_entity.dxf.color == 256 else block_entity.dxf.color
+                DEBUG("    CIRCLE center:%s radius:%s color:%s" % (center, radius, color))
+                target.modelspace().add_circle(center, radius, dxfattribs={'color': color})
             elif block_entity.dxftype() == 'ARC':
-                center = Vector(block_entity.dxf.center).rot_z_deg(entity.dxf.rotation) * entity.dxf.xscale + Vector(entity.dxf.insert)
-                radius = block_entity.dxf.radius * entity.dxf.xscale
+                center      = Vector(block_entity.dxf.center).rot_z_deg(entity.dxf.rotation) * entity.dxf.xscale + Vector(entity.dxf.insert)
+                radius      = block_entity.dxf.radius * entity.dxf.xscale
                 start_angle = block_entity.dxf.start_angle + entity.dxf.rotation
-                end_angle = block_entity.dxf.end_angle + entity.dxf.rotation
-                DEBUG('ARC center:%s radius:%s start_angle:%s end_angle:%s' % (center, radius, start_angle, end_angle))
-                target.modelspace().add_arc(center, radius, start_angle, end_angle)
+                end_angle   = block_entity.dxf.end_angle + entity.dxf.rotation
+                color       = source.layers.get(block_entity.dxf.layer).dxf.color if block_entity.dxf.color == 256 else block_entity.dxf.color
+                DEBUG('ARC center:%s radius:%s start_angle:%s end_angle:%s color:%s' % (center, radius, start_angle, end_angle, color))
+                target.modelspace().add_arc(center, radius, start_angle, end_angle, dxfattribs={'color': color})
             else:
                 if args.ignore:
                     DEBUG('%s ignored' % (block_entity.dxftype()))
