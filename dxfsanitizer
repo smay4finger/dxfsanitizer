@@ -3,7 +3,8 @@
 import ezdxf
 import argparse
 
-from ezdxf.algebra import Vector
+from ezdxf.algebra import Vector, bulge_to_arc
+from math import degrees
 
 parser = argparse.ArgumentParser(description='DXF sanitizer for laser cutter')
 parser.add_argument('source')
@@ -56,6 +57,24 @@ for entity in entities:
         end_angle   = entity.dxf.end_angle
         color       = source.layers.get(entity.dxf.layer).dxf.color if entity.dxf.color == 256 else entity.dxf.color
         add_arc(center, radius, start_angle, end_angle, color)
+    elif entity.dxftype() == 'LWPOLYLINE':
+        DEBUG('= LWPOLYLINE =')
+        points = list(entity)
+        color  = source.layers.get(entity.dxf.layer).dxf.color if entity.dxf.color == 256 else entity.dxf.color
+        if entity.closed:
+            points.append(points[0])
+        p1  = points.pop(0)
+        while len(points) > 0:
+            p2 = points.pop(0)
+            if p1[4] != 0:
+                ( center, start_angle, end_angle, radius ) = ezdxf.algebra.bulge_to_arc(p1[0:2], p2[0:2], p1[4])
+                add_arc(center, radius, degrees(start_angle), degrees(end_angle), color)
+            else:
+                start = p1[0:2]
+                end   = p2[0:2]
+                add_line(start, end, color)
+            p1 = p2
+        DEBUG('= END LWPOLYLINE =')
     elif entity.dxftype() == 'INSERT':
         DEBUG('= INSERT "%s" at %s scale:%s =' % (entity.dxf.name, entity.dxf.insert, entity.dxf.xscale))
         block = source.blocks.get(entity.dxf.name)
@@ -80,6 +99,27 @@ for entity in entities:
                 end_angle   = block_entity.dxf.end_angle + entity.dxf.rotation
                 color       = source.layers.get(block_entity.dxf.layer).dxf.color if block_entity.dxf.color == 256 else block_entity.dxf.color
                 add_arc(center, radius, start_angle, end_angle, color)
+            elif block_entity.dxftype() == 'LWPOLYLINE':
+                DEBUG('== LWPOLYLINE ==')
+                points = list(block_entity)
+                color  = source.layers.get(block_entity.dxf.layer).dxf.color if block_entity.dxf.color == 256 else block_entity.dxf.color
+                if entity.closed:
+                    points.append(points[0])
+                p1  = points.pop(0)
+                while len(points) > 0:
+                    p2 = points.pop(0)
+                    if start[4] != 0:
+                        ( center, start_angle, end_angle, radius ) = bulge_to_arc(p1[0:2], p2[0:2], p1[4])
+                        center      = Vector(center).rot_z_deg(entity.dxf.rotation) * entity.dxf.xscale + Vector(entity.dxf.insert)
+                        radius      = radius * entity.dxf.xscale
+                        start_angle = degrees(start_angle) + entity.dxf.rotation
+                        end_angle   = degrees(end_angle) + entity.dxf.rotation
+                        add_arc(center, radius, start_angle, end_angle, color)
+                    else:
+                        start = Vector(p1[0:2]).rot_z_deg(entity.dxf.rotation) * entity.dxf.xscale + Vector(entity.dxf.insert)
+                        end   = Vector(p2[0:2]).rot_z_deg(entity.dxf.rotation) * entity.dxf.xscale + Vector(entity.dxf.insert)
+                        add_line(start, end, color)
+                    p1 = p2
             else:
                 if args.ignore:
                     DEBUG('%s ignored' % (block_entity.dxftype()))
