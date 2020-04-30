@@ -3,7 +3,7 @@
 import ezdxf
 import argparse
 
-from ezdxf.algebra import Vector, bulge_to_arc
+from ezdxf.math import Vector, bulge_to_arc
 from math import degrees
 
 parser = argparse.ArgumentParser(description='DXF sanitizer for laser cutter')
@@ -67,7 +67,7 @@ for entity in entities:
         while len(points) > 0:
             p2 = points.pop(0)
             if p1[4] != 0:
-                ( center, start_angle, end_angle, radius ) = ezdxf.algebra.bulge_to_arc(p1[0:2], p2[0:2], p1[4])
+                ( center, start_angle, end_angle, radius ) = bulge_to_arc(p1[0:2], p2[0:2], p1[4])
                 add_arc(center, radius, degrees(start_angle), degrees(end_angle), color)
             else:
                 start = p1[0:2]
