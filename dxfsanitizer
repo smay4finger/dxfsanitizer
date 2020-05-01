@@ -3,7 +3,7 @@
 import ezdxf
 import argparse
 
-from ezdxf.math import Vector, bulge_to_arc
+from ezdxf.math import Vector, BSpline, BSplineClosed, bulge_to_arc
 from math import degrees
 
 parser = argparse.ArgumentParser(description='DXF sanitizer for laser cutter')
@@ -79,6 +79,24 @@ for entity in entities:
                 add_line(start, end, color)
             p1 = p2
         DEBUG('= END LWPOLYLINE =')
+    elif entity.dxftype() == 'SPLINE':
+        DEBUG('= SPLINE =')
+        control_points = entity.control_points
+        knots          = entity.knots
+        weights        = entity.weights
+        order          = entity.dxf.degree + 1
+        color          = color_of(entity)
+        segments       = len(control_points) * 20
+        if entity.closed:
+            points = list(BSplineClosed(control_points[:-entity.dxf.degree], order).approximate(segments))
+        else:
+            points = list(BSpline(control_points, order).approximate(segments))
+        p1  = points.pop(0)
+        while len(points) > 0:
+            p2 = points.pop(0)
+            add_line(p1, p2, color)
+            p1 = p2
+        DEBUG('= END SPLINE =')
     elif entity.dxftype() == 'INSERT':
         DEBUG('= INSERT "%s" at %s scale:%s =' % (entity.dxf.name, entity.dxf.insert, entity.dxf.xscale))
         block = source.blocks.get(entity.dxf.name)
