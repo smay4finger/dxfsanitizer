@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+
+import ezdxf
+import argparse
+
+parser = argparse.ArgumentParser(description='DXF sanitizer for laser cutter')
+parser.add_argument('source')
+parser.add_argument('target')
+
+args = parser.parse_args()
+
+points = []
+with open(args.source) as source:
+    for line in source.readlines():
+        (x, y) = line.strip().split(';')
+        points.append((float(x), float(y)))
+
+if len(points) >= 2:
+    target = ezdxf.new('AC1015')
+    msp = target.modelspace()
+    msp.add_lwpolyline(points, dxfattribs={'closed': True})
+    target.saveas(args.target)
